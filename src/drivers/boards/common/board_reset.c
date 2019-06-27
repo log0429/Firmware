@@ -1,6 +1,7 @@
 /****************************************************************************
  *
- *   Copyright (C) 2019 PX4 Development Team. All rights reserved.
+ *   Copyright (C) 2019 Gregory Nutt. All rights reserved.
+ *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,7 +13,7 @@
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 3. Neither the name PX4 nor the names of its contributors may be
+ * 3. Neither the name NuttX nor the names of its contributors may be
  *    used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -31,76 +32,46 @@
  *
  ****************************************************************************/
 
-/**
- * @file armv7-m_dcache.cpp
- *
- * Driver for the armv7 m_dcache.
- *
- */
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
 
-#include <px4_config.h>
-#include <px4_log.h>
-#include <board_config.h>
-#include <stdint.h>
-#include <string.h>
+#include <nuttx/config.h>
 
-#include <parameters/param.h>
+#include <nuttx/arch.h>
 
-#include <nuttx/cache.h>
+#include <nuttx/board.h>
 
-#if defined(CONFIG_ARMV7M_DCACHE) && defined(CONFIG_ARMV7M_DCACHE_WRITETHROUGH)
+#ifdef CONFIG_BOARDCTL_RESET
 
-extern "C" __EXPORT int dcache_main(int argc, char *argv[]);
-extern "C" __EXPORT int board_get_dcache_setting();
+/****************************************************************************
+ * Public functions
+ ****************************************************************************/
 
-/************************************************************************************
- * Name: board_get_dcache_setting
+/****************************************************************************
+ * Name: board_reset
  *
  * Description:
- *  Called to retrieve the parameter setting to enable/disable
- *  the dcache.
+ *   Reset board.  Support for this function is required by board-level
+ *   logic if CONFIG_BOARDCTL_RESET is selected.
  *
  * Input Parameters:
- *  None
+ *   status - Status information provided with the reset event.  This
+ *            meaning of this status information is board-specific.  If not
+ *            used by a board, the value zero may be provided in calls to
+ *            board_reset().
  *
  * Returned Value:
- *  -1 -  Not set - if Eratta exits turn dcache off else leave it on
- *   0 -  if Eratta exits turn dcache off else leave it on
- *   1 -  Force it off
- *   2 -  Force it on
+ *   If this function returns, then it was not possible to power-off the
+ *   board due to some constraints.  The return value int this case is a
+ *   board-specific reason for the failure to shutdown.
  *
- ************************************************************************************/
+ ****************************************************************************/
 
-int board_get_dcache_setting()
+int board_reset(int status)
 {
-	param_t ph = param_find("SYS_FORCE_F7DC");
-	int32_t dcache_setting = -1;
-
-	if (ph != PARAM_INVALID) {
-		param_get(ph, &dcache_setting);
-	}
-
-	return dcache_setting;
-}
-
-int dcache_main(int argc, char *argv[])
-{
-	int action = -1;
-	char *pmesg = nullptr;
-	bool state = false;
-
-	if (argc > 1) {
-		if (!strcmp(argv[1], "on") || !strcmp(argv[1], "1")) {
-			action = 1;
-		}
-
-		if (!strcmp(argv[1], "off") || !strcmp(argv[1], "0")) {
-			action = 0;
-		}
-	}
-
-	board_dcache_info(action, &pmesg, &state);
-	PX4_INFO("M7 cpuid %s dcache %s", pmesg, state ? "On" : "Off");
+	up_systemreset();
 	return 0;
 }
-#endif
+
+#endif /* CONFIG_BOARDCTL_RESET */

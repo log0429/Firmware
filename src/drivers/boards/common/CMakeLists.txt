@@ -40,6 +40,7 @@ if ((${PX4_PLATFORM} MATCHES "nuttx") AND NOT ${PX4_BOARD} MATCHES "io")
 		board_fat_dma_alloc.c
 		board_gpio_init.c
 		board_dcache_control.c
+		board_reset.c
 		)
 
 	if (${CONFIG_ARCH_CHIP} MATCHES "kinetis")
